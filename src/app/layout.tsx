@@ -13,11 +13,13 @@ export const metadata: Metadata = {
     description: "Track your card game match results",
 }
 
-export default function RootLayout({children,}: {
+export default function RootLayout({
+                                       children,
+                                   }: {
     children: React.ReactNode
 }) {
     return (
-        <html lang="en">
+        <html lang="ja">
         <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <div className="min-h-screen flex flex-col">

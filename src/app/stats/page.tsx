@@ -56,6 +56,7 @@ export default function StatsPage() {
                             <LineChart
                                 data={Array.from({ length: 30 }, (_, i) => ({
                                     day: i + 1,
+                                    // ここで Math.random() を使用
                                     winRate: 40 + Math.random() * 30,
                                 }))}
                             >
@@ -129,6 +130,7 @@ export default function StatsPage() {
                                         <BarChart
                                             data={decks.map((d) => ({
                                                 name: d,
+                                                // ここで Math.random() を使用
                                                 winRate: Math.floor(Math.random() * 40) + 30,
                                             }))}
                                         >
@@ -173,4 +175,3 @@ export default function StatsPage() {
         </div>
     )
 }
-

@@ -7,19 +7,23 @@ import { Button } from "@/components/ui/button"
 const routes = [
     {
         href: "/",
-        label: "Home",
+        label: "ホーム",
     },
     {
         href: "/records",
-        label: "Records",
+        label: "記録",
     },
     {
         href: "/new",
-        label: "New Record",
+        label: "新規記録",
     },
     {
         href: "/stats",
-        label: "Stats",
+        label: "統計",
+    },
+    {
+        href: "/decks",
+        label: "デッキ",
     },
 ]
 
