@@ -1,177 +1,81 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
+import { useEffect, useState } from "react"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { toast } from "sonner"
+import { getUserFavoriteDeck, getUserDeck } from "@/lib/api/userDeck"
+import type { GetUserFavoriteDeckResponse, GetUserDeckResponse } from "@/lib/type/UserDeckType"
+import {getDeckList} from "@/lib/api/deck";
+import {GetDeckListResponse} from "@/lib/type/DeckType";
 
-const formSchema = z.object({
-    turnOrder: z.enum(["first", "second"]),
-    turns: z.string().min(1, "入力必須です"),
-    result: z.enum(["win", "lose"]),
-    myDeck: z.string().min(1, "入力必須です"),
-    opponentDeck: z.string().min(1, "入力必須です"),
-})
+export default function DeckSelector() {
+    const [favoriteDeck, setFavoriteDeck] = useState<GetUserFavoriteDeckResponse>(null)
+    const [userDecks, setUserDecks] = useState<GetUserDeckResponse>([])
+    const [allDecks, setAllDecks] = useState<GetDeckListResponse>({ decks: [] })
+    const [selectedDeck, setSelectedDeck] = useState<string>("")
 
-const decks = ["Dragon", "Necro", "Shadow", "Blood", "Haven", "Sword", "Forest", "Portal", "Rune"]
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const fav = await getUserFavoriteDeck()
+                const user = await getUserDeck()
+                const all = await getDeckList()
+                setFavoriteDeck(fav)
+                setUserDecks(user)
+                setAllDecks(all)
+                if (fav) {
+                    setSelectedDeck(fav.main_name.toLowerCase())
+                } else if (user.length > 0) {
+                    setSelectedDeck(user[0].main_name.toLowerCase())
+                }
+            } catch (error) {
+                console.error("DeckSelector fetch error:", error)
+            }
+        }
+        fetchData()
+    }, [])
 
-export default function NewRecordPage() {
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            turns: "",
-            myDeck: "",
-            opponentDeck: "",
-        },
-    })
-
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        toast.success("記録を追加しました！")
-        form.reset()
-    }
+    // ユーザー登録済みデッキの名前配列（小文字）
+    const userDeckNames = userDecks.map((deck) => deck.main_name.toLowerCase())
+    // 全デッキの名前配列（小文字）; Selectのために all.decks を利用
+    const allDeckNames = allDecks.decks.map((deck) => deck.main_name.toLowerCase())
+    // その他のデッキ：全デッキからユーザー登録済みデッキを除外
+    const otherDeckNames = allDeckNames.filter((name) => !userDeckNames.includes(name))
 
     return (
-        <div className="container max-w-2xl py-6">
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                    <FormField
-                        control={form.control}
-                        name="turnOrder"
-                        render={({ field }) => (
-                            <FormItem className="space-y-3">
-                                <FormLabel>手番</FormLabel>
-                                <FormControl>
-                                    <RadioGroup
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                        className="flex flex-col space-y-1"
-                                    >
-                                        <FormItem className="flex items-center space-x-3 space-y-0">
-                                            <FormControl>
-                                                <RadioGroupItem value="first" />
-                                            </FormControl>
-                                            <FormLabel className="font-normal">先行</FormLabel>
-                                        </FormItem>
-                                        <FormItem className="flex items-center space-x-3 space-y-0">
-                                            <FormControl>
-                                                <RadioGroupItem value="second" />
-                                            </FormControl>
-                                            <FormLabel className="font-normal">後攻</FormLabel>
-                                        </FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="turns"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>ターン数</FormLabel>
-                                <FormControl>
-                                    <Input type="number" min="1" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="result"
-                        render={({ field }) => (
-                            <FormItem className="space-y-3">
-                                <FormLabel>勝敗</FormLabel>
-                                <FormControl>
-                                    <RadioGroup
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                        className="flex flex-col space-y-1"
-                                    >
-                                        <FormItem className="flex items-center space-x-3 space-y-0">
-                                            <FormControl>
-                                                <RadioGroupItem value="win" />
-                                            </FormControl>
-                                            <FormLabel className="font-normal">勝利</FormLabel>
-                                        </FormItem>
-                                        <FormItem className="flex items-center space-x-3 space-y-0">
-                                            <FormControl>
-                                                <RadioGroupItem value="lose" />
-                                            </FormControl>
-                                            <FormLabel className="font-normal">敗北</FormLabel>
-                                        </FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="myDeck"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>使用デッキ</FormLabel>
-                                <Select onValueChange={field.onChange}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="デッキを選択" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {decks.map((deck) => (
-                                            <SelectItem key={deck} value={deck.toLowerCase()}>
-                                                {deck}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="opponentDeck"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>相手のデッキ</FormLabel>
-                                <Select onValueChange={field.onChange}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="デッキを選択" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {decks.map((deck) => (
-                                            <SelectItem key={deck} value={deck.toLowerCase()}>
-                                                {deck}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <Button type="submit" className="w-full">
-                        登録
-                    </Button>
-                </form>
-            </Form>
+        <div className="space-y-2">
+            <h2 className="text-lg font-bold">使用デッキを選択</h2>
+            <Select value={selectedDeck} onValueChange={setSelectedDeck}>
+                <SelectTrigger>
+                    <SelectValue placeholder="デッキを選択" />
+                </SelectTrigger>
+                <SelectContent>
+                    {/* お気に入りがあれば一番上に表示 */}
+                    {favoriteDeck && (
+                        <SelectItem key="favorite" value={favoriteDeck.main_name.toLowerCase()}>
+                            お気に入り: {favoriteDeck.main_name}
+                        </SelectItem>
+                    )}
+                    {/* ユーザ登録済みのデッキ */}
+                    {userDecks.map((deck) => (
+                        <SelectItem key={deck.id} value={deck.main_name.toLowerCase()}>
+                            {deck.main_name}
+                        </SelectItem>
+                    ))}
+                    {/* その他のデッキ */}
+                    {otherDeckNames.map((name) => (
+                        <SelectItem key={name} value={name}>
+                            {name.charAt(0).toUpperCase() + name.slice(1)}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
         </div>
     )
 }
-
