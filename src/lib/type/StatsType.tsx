@@ -5,7 +5,6 @@
  */
 import { MatchResultOption } from "@/lib/type/ResultType";
 
-// 統計情報のうち、全体統計を表す型
 export interface OverallStats {
     total_matches: number;
     win_rate: number;
@@ -24,3 +23,21 @@ export interface DeckStats {
 }
 
 export type GetDecksStatsResponse = DeckStats[];
+
+export interface WinRateTrendData {
+    date: Date;
+    win_rate: number;
+}
+
+export type GetWinRateTrendResponse = WinRateTrendData[];
+
+export type GetWinRateTrendRequest = MatchResultOption;
+
+export type GetDeckDetailedStatsResponse = {
+    deck_id: number;
+    total_matches: number;
+    win_rate: number;
+    first_win_rate: number;
+    second_win_rate: number;
+    average_turns: number;
+}
