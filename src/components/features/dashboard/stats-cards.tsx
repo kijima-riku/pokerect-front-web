@@ -1,6 +1,6 @@
 import { Users, Trophy, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { OverallStats } from "@/type"
+import {OverallStats} from "@/lib/type/StatsType";
 
 export function StatsCards({ stats }: { stats: OverallStats }) {
     return (
@@ -11,7 +11,7 @@ export function StatsCards({ stats }: { stats: OverallStats }) {
                     <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalMatches}</div>
+                    <div className="text-2xl font-bold">{stats.total_matches}</div>
                 </CardContent>
             </Card>
             <Card>
@@ -20,7 +20,7 @@ export function StatsCards({ stats }: { stats: OverallStats }) {
                     <Trophy className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{stats.winRate.toFixed(1)}%</div>
+                    <div className="text-2xl font-bold">{stats.win_rate.toFixed(1)}%</div>
                 </CardContent>
             </Card>
             <Card>
@@ -29,8 +29,8 @@ export function StatsCards({ stats }: { stats: OverallStats }) {
                     <Target className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{stats.bestDeck.name}</div>
-                    <p className="text-xs text-muted-foreground">勝率: {stats.bestDeck.winRate.toFixed(1)}%</p>
+                    <div className="text-2xl font-bold">{stats.best_deck_id}</div>
+                    <p className="text-xs text-muted-foreground">勝率: {stats.best_deck_win_rate}%</p>
                 </CardContent>
             </Card>
         </div>

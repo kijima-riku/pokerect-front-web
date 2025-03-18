@@ -1,15 +1,12 @@
+// pages/records.tsx
 import { Suspense } from "react"
 import { RecordsFilter } from "@/components/features/records/records-filter"
 import { MatchesTable } from "@/components/features/records/matches-table"
-import type { Match } from "@/type"
-
-// この関数は実際にはAPIやDBからデータを取得します
-async function getMatches(): Promise<Match[]> {
-    return []
-}
+import type { GetMatchResultResponse } from "@/lib/type/ResultType"
+import { getMatchResult } from "@/lib/api/result"
 
 export default async function RecordsPage() {
-    const initialMatches = await getMatches()
+    const initialMatches: GetMatchResultResponse = await getMatchResult({})
 
     return (
         <div className="container py-6 space-y-6">
@@ -20,4 +17,3 @@ export default async function RecordsPage() {
         </div>
     )
 }
-

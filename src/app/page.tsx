@@ -7,40 +7,16 @@ import { StatsCards } from "@/components/features/dashboard/stats-cards"
 import { DeckWinRateChart } from "@/components/features/dashboard/deck-stats"
 import { DeckUsage } from "@/components/features/dashboard/deck-usage"
 import { RecentMatches } from "@/components/features/dashboard/recent-matches"
-import { calculateOverallStats } from "@/lib/utils/stats"
-import type { Match, DeckStats } from "@/type"
-
-// この関数は実際にはAPIやDBからデータを取得します
-async function getInitialData(): Promise<{
-  matches: Match[]
-  deckStats: DeckStats[]
-}> {
-  // サンプルデータを生成
-  const matches: Match[] = Array.from({ length: 10 }, (_, i) => ({
-    id: i.toString(),
-    date: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
-    result: Math.random() > 0.5 ? "win" : "lose",
-    isFirst: Math.random() > 0.5,
-    turns: Math.floor(Math.random() * 10) + 5,
-    myDeck: ["Dragon", "Shadow", "Blood", "Haven"][Math.floor(Math.random() * 4)],
-    opponentDeck: ["Dragon", "Shadow", "Blood", "Haven"][Math.floor(Math.random() * 4)],
-  }))
-
-  const deckStats: DeckStats[] = [
-    { name: "Dragon", games: 25, winRate: 65, firstWinRate: 60, secondWinRate: 70, averageTurns: 8.5 },
-    { name: "Shadow", games: 20, winRate: 55, firstWinRate: 52, secondWinRate: 58, averageTurns: 7.8 },
-    { name: "Blood", games: 15, winRate: 48, firstWinRate: 45, secondWinRate: 51, averageTurns: 9.2 },
-    { name: "Haven", games: 12, winRate: 58, firstWinRate: 62, secondWinRate: 54, averageTurns: 8.1 },
-  ]
-
-  return { matches, deckStats }
-}
-
-export const revalidate = 3600 // 1時間ごとに再生成
+import { getOverallStats, getDecksStats } from "@/lib/api/stats"
+import { getMatchResult } from "@/lib/api/result"
 
 export default async function Home() {
-  const { matches, deckStats } = await getInitialData()
-  const overallStats = calculateOverallStats(matches)
+  const [overallStats, deckStats, matchResults] = await Promise.all([
+    getOverallStats(),
+    getDecksStats(),
+    getMatchResult({})
+  ])
+
 
   return (
       <div className="container px-4 py-6 space-y-6">
@@ -74,7 +50,7 @@ export default async function Home() {
             </Button>
           </div>
           <Suspense fallback={<div>Loading recent matches...</div>}>
-            <RecentMatches matches={matches} />
+            <RecentMatches matches={matchResults} />
           </Suspense>
         </div>
 
@@ -95,4 +71,3 @@ export default async function Home() {
       </div>
   )
 }
-

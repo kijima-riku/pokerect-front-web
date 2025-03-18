@@ -1,6 +1,6 @@
 "use client"
 
-import {useEffect, useState} from "react"
+import { useEffect, useState } from "react"
 import {
     type ColumnDef,
     flexRender,
@@ -14,24 +14,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import type { Match } from "@/type"
+import type {GetMatchResultResponse, MatchBase} from "@/lib/type/ResultType";
 
-const generateSampleData = (count: number): Match[] => {
-    const decks = ["Dragon", "Necro", "Shadow", "Blood", "Haven", "Sword", "Forest", "Portal", "Rune"]
-    const results: ("win" | "lose")[] = ["win", "lose"]
-
-    return Array.from({ length: count }, (_, i) => ({
-        id: (i + 1).toString(),
-        date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-        result: results[Math.floor(Math.random() * results.length)],
-        isFirst: Math.random() > 0.5,
-        turns: Math.floor(Math.random() * 15) + 5,
-        myDeck: decks[Math.floor(Math.random() * decks.length)],
-        opponentDeck: decks[Math.floor(Math.random() * decks.length)],
-    })).sort((a, b) => b.date.getTime() - a.date.getTime())
-}
-
-const columns: ColumnDef<Match>[] = [
+const columns: ColumnDef<MatchBase>[] = [
     {
         accessorKey: "date",
         header: "Date",
@@ -65,20 +50,17 @@ const columns: ColumnDef<Match>[] = [
     },
 ]
 
-export function MatchesTable({ initialMatches }: { initialMatches: Match[] }) {
+export function MatchesTable({ initialMatches }: { initialMatches: GetMatchResultResponse }) {
     const [isMobile, setIsMobile] = useState(false)
-    const [data, setData] = useState<Match[]>(initialMatches.length > 0 ? initialMatches : generateSampleData(50))
+    // pages/recordsから渡された初期データをそのまま利用
+    const [data] = useState<GetMatchResultResponse>(initialMatches)
 
     useEffect(() => {
-        setIsMobile(window.innerWidth < 768);
-
-        const handleResize = () => {
-            setIsMobile(window.innerWidth < 768);
-        };
-
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
+        const handleResize = () => setIsMobile(window.innerWidth < 768)
+        handleResize() // 初期状態を設定
+        window.addEventListener("resize", handleResize)
+        return () => window.removeEventListener("resize", handleResize)
+    }, [])
 
     const table = useReactTable({
         data,
@@ -118,7 +100,7 @@ export function MatchesTable({ initialMatches }: { initialMatches: Match[] }) {
                                     <div>{row.getValue("myDeck")}</div>
                                 </div>
                                 <div>
-                                    <div className="text-muted-foreground">Opponent's Deck</div>
+                                    <div className="text-muted-foreground">Opponent Deck</div>
                                     <div>{row.getValue("opponentDeck")}</div>
                                 </div>
                             </div>
@@ -126,12 +108,7 @@ export function MatchesTable({ initialMatches }: { initialMatches: Match[] }) {
                     </Card>
                 ))}
                 <div className="flex items-center justify-center space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
                         Previous
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
@@ -199,4 +176,3 @@ export function MatchesTable({ initialMatches }: { initialMatches: Match[] }) {
         </div>
     )
 }
-

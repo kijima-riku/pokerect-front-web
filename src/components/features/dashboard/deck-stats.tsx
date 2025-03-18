@@ -2,12 +2,12 @@
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
-import type { DeckStats } from "@/type"
+import { GetDecksStatsResponse} from "@/lib/type/StatsType";
 
-export function DeckWinRateChart({ stats }: { stats: DeckStats[] }) {
+export function DeckWinRateChart({ stats }: { stats: GetDecksStatsResponse }) {
     const data = stats.map((stat) => ({
-        name: stat.name,
-        winRate: stat.winRate,
+        name: stat.deck_id,
+        win_rate: stat.win_rate
     }))
 
     return (
