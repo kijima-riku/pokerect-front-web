@@ -1,33 +1,22 @@
 /**
  * =====================================
- * Deck API
+ * Deck API (デッキ関連)
  * =====================================
  */
 
-// 3️⃣ デッキ一覧取得
-export type DeckItem = {
+type DeckBase = {
+    main_name: string;
+    sub_name: string | null;
+};
+
+export interface Deck extends DeckBase {
     id: number;
-    name: string;
 }
 
-export type DecksListResponse = {
-    decks: DeckItem[];
+export interface GetDeckListResponse {
+    decks: Deck[];
 }
 
-// 4️⃣ デッキ詳細取得
-export type DeckDetailResponse = {
-    id: number;
-    name: string;
-    description: string;
-}
+export type PostDeckRequest = DeckBase
 
-// 5️⃣ お気に入りデッキ取得
-export type DeckFavoriteItem = {
-    id: number;
-    name: string;
-    is_favorite: boolean;
-}
-
-export type DeckFavoriteResponse = {
-    decks: DeckFavoriteItem[];
-}
+export type PostDeckListResponse = Deck

@@ -3,51 +3,22 @@
  * Decks / User-Decks API（デッキ情報関連）
  * =====================================
  */
+import { Deck } from "@/lib/type/DeckType";
 
-// GET /api/decks - 利用可能なデッキ一覧取得
-export type GetDecksResponse = {
-    decks: {
-        id: string;
-        name: string;
-        isActive: boolean;
-    }[];
+export interface DeckIdRequest {
+    deck_id: number;
 }
 
-// GET /api/user-decks - ユーザのデッキ一覧取得
-export type UserDeck = {
-    id: string;
-    name: string;
-    isActive: boolean;
-    isFavorite: boolean;
-    addedAt: string; // 例: "YYYY-MM-DD"
+export type GetUserDeckResponse = Deck[];
+
+export type PostUserDeckRequest = DeckIdRequest
+
+export interface PostUserDeckResponse {
+    message: string;
 }
 
-export type GetUserDecksResponse = {
-    userDecks: UserDeck[];
-}
+export type GetUserFavoriteDeckResponse = Deck | null;
 
-// POST /api/user-decks - 新しいデッキの追加
-export type AddDeckRequest = {
-    name: string;
-}
+export type PatchUserFavoriteDeckRequest = DeckIdRequest
 
-export type AddDeckResponse = UserDeck;
-
-// PATCH /api/user-decks/:deckId/active - 有効/無効切替
-export type ToggleActiveRequest = {
-    isActive?: boolean;
-}
-
-export type ToggleActiveResponse = UserDeck;
-
-// PATCH /api/user-decks/:deckId/favorite - お気に入りデッキの設定
-export type SetFavoriteRequest = {
-    isFavorite?: boolean;
-}
-
-export type SetFavoriteResponse = UserDeck;
-
-// DELETE /api/user-decks/:deckId - デッキ削除
-export type RemoveDeckResponse = {
-    success: boolean;
-}
+export type DeleteUserDeckRequest = DeckIdRequest

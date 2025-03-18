@@ -3,49 +3,21 @@
  * Stats API（統計情報関連）
  * =====================================
  */
-import {Match} from "@/lib/type/MatcheType";
+import {MatchResultOption} from "@/lib/type/ResultType";
 
-// GET /api/stats/overall
+export type GetOverallStatsRequest = MatchResultOption
+
 export type GetOverallStatsResponse = {
-    totalMatches: number;
-    winRate: number;
-    bestDeckId: number
-    bestDeckWinRate: number;
+    total_matches: number;
+    win_rate: number;
+    best_deck_id: number
+    best_deck_win_rate: number;
 }
 
-// GET /api/stats/decks
-export type DeckMatchup = {
-    opponentDeck: string;
-    games: number;
-    winRate: number;
+type StatsBase = {
+    deck_id: number;
+    total_matches: number;
+    win_rate: number;
 }
 
-export type DeckStatsItem = {
-    name: string;
-    games: number;
-    winRate: number;
-    firstWinRate: number;
-    secondWinRate: number;
-    averageTurns: number;
-    matchups: DeckMatchup[];
-}
-
-export type GetDeckStatsResponse = {
-    deckStats: DeckStatsItem[];
-}
-
-// GET /api/stats/decks/:deckName
-export type GetDeckDetailStatsResponse = {
-    name: string;
-    games: number;
-    winRate: number;
-    firstWinRate: number;
-    secondWinRate: number;
-    averageTurns: number;
-    matchups: DeckMatchup[];
-    recentMatches: Match[];
-    turnDistribution: {
-        turns: number;
-        count: number;
-    }[];
-}
+export type GetDecksStatsResponse = StatsBase[]

@@ -1,42 +1,46 @@
 /**
  * =====================================
- * Result API
+ * Result API (試合結果関連)
  * =====================================
  */
+import {Deck} from "@/lib/type/DeckType";
 
-// 6️⃣ 結果登録
-export type ResultRegistrationResponse = {
-    message: string;
-    result_id: number;
-}
 
-// 7️⃣ 戦績一覧取得
-export type ResultItem = {
+export interface MatchBase {
     id: number;
     user_id: number;
+    my_deck: Deck;
+    opponent_deck: Deck;
+    is_first: boolean;
+    turn_count: number;
+    match_result: number;
+}
+
+export interface MatchInput {
     my_deck: number;
     opponent_deck: number;
     is_first: boolean;
+    outcome: number;
     turn_count: number;
-    match_result: number; // 0=引き分け, 1=勝ち, 2=負け
-    created_at: string; // ISO形式など
 }
 
-export type ResultsListResponse = {
-    results: ResultItem[];
+export interface MatchResultOption {
+    limit?: number;
+    page?: number;
+    deck_id?: number;
+    opponent_deck_id?: number;
+    is_first?: boolean;
+    outcome?: number;
+    start_date?: Date;
+    end_date?: Date;
 }
 
-// 8️⃣ 勝率取得
-export type ResultRateResponse = {
-    win_rate: number;
-    total_games: number;
-    wins: number;
-    losses: number;
-    draws: number;
-}
+export type GetMatchResultResponse = MatchBase[];
 
-export type ResultsDeckResponse = {
-    deckId: number;
-    totalMatches: number;
-    winRate: number;
+export type GetMatchResultRequest = MatchResultOption
+
+export type PostMatchRequest = MatchInput
+
+export interface PostMatchResponse extends MatchInput {
+    id: number;
 }

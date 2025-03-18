@@ -1,16 +1,25 @@
 /**
  * =====================================
- * Auth API
+ * Auth API (認証関連)
  * =====================================
  */
 
-// 1️⃣ デバイスセットアップ（トークン発行）
-export type AuthSetupResponse = {
-    token: string;
-}
+// SignInRequest は引数なし
 
-// 2️⃣ サインイン（トークン認証）
-export type AuthSigninResponse = {
+type AuthResponseBase = {
     user_id: number;
-    message: string;
-}
+    access_token: string;
+    refresh_token: string;
+};
+
+export type SignInResponse = AuthResponseBase;
+
+export type RefreshTokenResponse = AuthResponseBase;
+
+export type RefreshTokenRequest = {
+    refresh_token: string;
+};
+
+export type ApiRequestArgument = {
+    access_token: string;
+};
