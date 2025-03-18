@@ -1,81 +1,133 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Star, StarOff, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
-// 仮のデータ（実際はAPIから取得）
+import {
+    getUserDeck,
+    postUserDeck,
+    getUserFavoriteDeck,
+    patchUserFavoriteDeck,
+    deleteUserDeck,
+} from "@/lib/api/userDeck"
+import type {
+    GetUserDeckResponse,
+} from "@/lib/type/UserDeckType"
+
+// 利用可能なデッキ（実際は getDeckList で取得するのが望ましいが、ここではダミー）
 const availableDecks = ["Dragon", "Shadow", "Blood", "Haven", "Sword", "Forest", "Portal", "Rune"]
 
-type UserDeck = {
-    id: string
-    name: string
-    isActive: boolean
-    isFavorite: boolean
-    addedAt: string
+// ダミーのデッキ名→デッキID マッピング
+const deckIdMapping: Record<string, number> = {
+    dragon: 1,
+    shadow: 2,
+    blood: 3,
+    haven: 4,
+    sword: 5,
+    forest: 6,
+    portal: 7,
+    rune: 8,
 }
 
 export default function SettingsPage() {
-    const [userDecks, setUserDecks] = useState<UserDeck[]>([
-        {
-            id: "1",
-            name: "Dragon",
-            isActive: true,
-            isFavorite: true,
-            addedAt: "2024-02-23",
-        },
-        {
-            id: "2",
-            name: "Shadow",
-            isActive: true,
-            isFavorite: false,
-            addedAt: "2024-02-23",
-        },
-        {
-            id: "3",
-            name: "Blood",
-            isActive: false,
-            isFavorite: false,
-            addedAt: "2024-02-23",
-        },
-    ])
+    const [userDecks, setUserDecks] = useState<GetUserDeckResponse>([])
+    // 初回取得したお気に入りのデッキID（string形式）を保存
+    const [initialFavoriteId, setInitialFavoriteId] = useState<number | null>(null)
+    // ユーザが選んだお気に入り（未送信の変更状態）
+    const [pendingFavorite, setPendingFavorite] = useState<number | null>(null)
+    const [availableDeckList] = useState<string[]>(availableDecks)
 
-    const handleAddDeck = (deckName: string) => {
-        const newDeck: UserDeck = {
-            id: Math.random().toString(),
-            name: deckName,
-            isActive: true,
-            isFavorite: false,
-            addedAt: new Date().toISOString().split("T")[0],
+    // API から最新のユーザーデッキ情報を取得
+    const fetchUserDecks = async () => {
+        try {
+            const user = await getUserDeck()
+            const fav = await getUserFavoriteDeck()
+            setUserDecks(user)
+            if (fav) {
+                setInitialFavoriteId(fav.id)
+                // 初期状態の pendingFavorite としても設定
+                setPendingFavorite(fav.id)
+            }
+        } catch (error) {
+            console.error("Error fetching user decks:", error)
         }
-        setUserDecks([...userDecks, newDeck])
-        toast.success("デッキを追加しました")
     }
 
-    const handleToggleActive = (deckId: string) => {
-        setUserDecks(userDecks.map((deck) => (deck.id === deckId ? { ...deck, isActive: !deck.isActive } : deck)))
-        toast.success("デッキの状態を更新しました")
+    useEffect(() => {
+        fetchUserDecks()
+        // もし availableDeckList を API で取得するなら以下のように:
+        // getDeckList().then(all => setAvailableDeckList(all.decks.map(deck => deck.main_name)))
+    }, [])
+
+    // コンポーネントのアンマウント時に、ローカルのお気に入り変更があれば patch リクエストを送信
+    useEffect(() => {
+        return () => {
+            if (pendingFavorite && pendingFavorite !== initialFavoriteId) {
+                // patchUserFavoriteDeck は非同期だが、ここでは fire-and-forget
+                patchUserFavoriteDeck({ deck_id: Number(pendingFavorite) })
+                    .then(() => {
+                        console.log("お気に入り更新完了")
+                    })
+                    .catch((err) => {
+                        console.error("お気に入り更新失敗:", err)
+                    })
+            }
+        }
+    }, [pendingFavorite, initialFavoriteId])
+
+    // デッキ追加（postUserDeck）→最新情報再取得
+    const handleAddDeck = async (deckName: string) => {
+        try {
+            const deckId = deckIdMapping[deckName.toLowerCase()]
+            if (!deckId) {
+                toast.error("無効なデッキ名です")
+                return
+            }
+            await postUserDeck({ deck_id: deckId })
+            toast.success("デッキを追加しました")
+            fetchUserDecks()
+        } catch (error) {
+            console.error("Error adding deck:", error)
+            toast.error("デッキの追加に失敗しました")
+        }
     }
 
-    const handleSetFavorite = (deckId: string) => {
-        setUserDecks(
-            userDecks.map((deck) => ({
+    // お気に入り更新：ローカル state のみ更新
+    const handleSetFavorite = (deckId: number) => {
+        // ユーザーデッキ全体を更新して、対象のデッキだけ isFavorite true にする
+        setUserDecks((prev) =>
+            prev.map((deck) => ({
                 ...deck,
                 isFavorite: deck.id === deckId,
             })),
         )
-        toast.success("お気に入りデッキを設定しました")
+        // ローカルの pendingFavorite を更新
+        setPendingFavorite(deckId)
+        toast.success("お気に入りデッキを変更しました")
     }
 
-    const handleRemoveDeck = (deckId: string) => {
-        setUserDecks(userDecks.filter((deck) => deck.id !== deckId))
-        toast.success("デッキを削除しました")
+    // デッキ削除：deleteUserDeck を呼び出して再取得
+    const handleRemoveDeck = async (deckId: number) => {
+        try {
+            await deleteUserDeck({ deck_id: Number(deckId) })
+            toast.success("デッキを削除しました")
+            fetchUserDecks()
+        } catch (error) {
+            console.error("Error removing deck:", error)
+            toast.error("デッキの削除に失敗しました")
+        }
     }
 
     return (
@@ -83,7 +135,9 @@ export default function SettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>デッキ設定</CardTitle>
-                    <CardDescription>使用するデッキの管理とお気に入りデッキの設定ができます</CardDescription>
+                    <CardDescription>
+                        使用するデッキの管理とお気に入りデッキの設定ができます
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-6">
@@ -94,8 +148,14 @@ export default function SettingsPage() {
                                         <SelectValue placeholder="デッキを追加" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {availableDecks
-                                            .filter((deck) => !userDecks.some((userDeck) => userDeck.name === deck))
+                                        {availableDeckList
+                                            .filter(
+                                                (deck) =>
+                                                    !userDecks.some(
+                                                        (userDeck) =>
+                                                            userDeck.main_name.toLowerCase() === deck.toLowerCase(),
+                                                    ),
+                                            )
                                             .map((deck) => (
                                                 <SelectItem key={deck} value={deck}>
                                                     {deck}
@@ -111,7 +171,6 @@ export default function SettingsPage() {
                                 <TableRow>
                                     <TableHead>デッキ名</TableHead>
                                     <TableHead>追加日</TableHead>
-                                    <TableHead>状態</TableHead>
                                     <TableHead>お気に入り</TableHead>
                                     <TableHead></TableHead>
                                 </TableRow>
@@ -119,18 +178,27 @@ export default function SettingsPage() {
                             <TableBody>
                                 {userDecks.map((deck) => (
                                     <TableRow key={deck.id}>
-                                        <TableCell>{deck.name}</TableCell>
-                                        <TableCell>{deck.addedAt}</TableCell>
+                                        <TableCell>{deck.main_name}{deck.sub_name}</TableCell>
+                                        <TableCell>{deck.created_at.toLocaleString()}</TableCell>
                                         <TableCell>
-                                            <Switch checked={deck.isActive} onCheckedChange={() => handleToggleActive(deck.id)} />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="icon" onClick={() => handleSetFavorite(deck.id)}>
-                                                {deck.isFavorite ? <Star className="h-4 w-4 fill-primary" /> : <StarOff className="h-4 w-4" />}
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleSetFavorite(deck.id)}
+                                            >
+                                                {pendingFavorite ? (
+                                                    <Star className="h-4 w-4 fill-primary" />
+                                                ) : (
+                                                    <StarOff className="h-4 w-4" />
+                                                )}
                                             </Button>
                                         </TableCell>
                                         <TableCell>
-                                            <Button variant="ghost" size="icon" onClick={() => handleRemoveDeck(deck.id)}>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleRemoveDeck(deck.id)}
+                                            >
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </TableCell>
@@ -144,4 +212,3 @@ export default function SettingsPage() {
         </div>
     )
 }
-

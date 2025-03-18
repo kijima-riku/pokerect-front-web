@@ -11,6 +11,7 @@ type DeckBase = {
 
 export interface Deck extends DeckBase {
     id: number;
+    created_at: Date;
 }
 
 export interface GetDeckListResponse {
