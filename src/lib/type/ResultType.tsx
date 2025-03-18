@@ -13,7 +13,8 @@ export interface MatchBase {
     opponent_deck: Deck;
     is_first: boolean;
     turn_count: number;
-    match_result: number;
+    outcome: number;
+    created_at: Date;
 }
 
 export interface MatchInput {
@@ -35,7 +36,7 @@ export interface MatchResultOption {
     end_date?: Date;
 }
 
-export type GetMatchResultResponse = MatchBase[];
+export type GetMatchResultResponse = MatchBase[]
 
 export type GetMatchResultRequest = MatchResultOption
 
